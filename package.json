@@ -1,0 +1,25 @@
+{
+  "name": "react-simpler-router",
+  "version": "0.8.0",
+  "description": "Straightforward dynamic routing for React with well-behaved nested routes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "router",
+    "routes",
+    "dynamic",
+    "nested",
+    "nestable",
+    "easy",
+    "simple"
+  ],
+  "repository": { 
+    "type": "git", 
+    "url": "https://github.com/zocky/react-simpler-router"
+  },
+  "author": "Zoran Obradović",
+  "license": "ISC"
+}
