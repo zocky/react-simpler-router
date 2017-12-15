@@ -11,18 +11,29 @@ export class Link extends React.Component {
   }
   render() {
     const realTo = this.realTo(this.props,this.context);
-    const onClick = (e) => { 
-      Router.go(realTo);
-      e.preventDefault();
-      e.stopPropagation(); 
-    };
+    const events = {};
+    if (this.props.fast) {
+      events.onClick = (e) => { 
+        e.preventDefault();
+        e.stopPropagation(); 
+      };
+      events.onMouseDown = (e) => {
+        if (e.button===0) Router.go(realTo);
+      };
+    } else {
+      events.onClick = (e) => { 
+        Router.go(realTo);
+        e.preventDefault();
+        e.stopPropagation(); 
+      };
+    }
     return(
       <a href={realTo} 
         className={this.props.className}
         role={this.props.role}
         style={this.props.style||{}}
-        onClick={onClick}
-      >{this.props.children||this.props.text}</a>
+        {...events}
+        >{this.props.children||this.props.text}</a>
     );
   }
 }
@@ -40,5 +51,6 @@ Link.propTypes = {
   className: PropTypes.string,
   children:PropTypes.node,
   role:PropTypes.string,
-  style:PropTypes.object
+  style:PropTypes.object,
+  fast:PropTypes.bool
 };

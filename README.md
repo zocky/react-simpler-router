@@ -134,6 +134,7 @@ Create a router-aware link. Use for internal links instead of `<a>`. If the link
 
 * `to` - The target URL.
 * `exact` - Should this link be active only at its own path, or also all subpaths?
+* `fast` - Should this link activate on mouse down instead of on click? Useful for selection lists, tabs and similar.
 * `text` - You can optionally provide the text for the link. Otherwise the children of `<NavLink>` will be used.
 * `children` - If `text` is not supplied, the NavLink's children will be rendered.
 * `className` - Will be *always* passed down to the rendered `<a>` element.

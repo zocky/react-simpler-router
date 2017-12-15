@@ -20,7 +20,6 @@ export class Route extends React.Component {
       if (merge) res = route.path + '/' + path;
       else res = route.url+'/'+path;
     }
-    console.log('realPath',path,res)
     return res;
   }
   getChildContext() {
@@ -48,7 +47,6 @@ export class Route extends React.Component {
   render() {
     const {merge,path,children,render,component} = this.props;
     const {url,params} = this.state;
-    console.log('render',path,url,this.realPath(this.props,this.context));
     if (!url) return null;
     if (render) {
       if (children) {
