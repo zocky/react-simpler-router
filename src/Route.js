@@ -15,11 +15,13 @@ export class Route extends React.Component {
   realPath(props,context) {
     const {route} = context;
     const {path,merge} = props;
+    var res = path;
     if (route && route.path && !path.startsWith('/')) {
-      if (merge) return route.path + '/';
-      else return route.url+'/'+path;
+      if (merge) res = route.path + '/' + path;
+      else res = route.url+'/'+path;
     }
-    else return path;
+    console.log('realPath',path,res)
+    return res;
   }
   getChildContext() {
     return {
@@ -37,14 +39,16 @@ export class Route extends React.Component {
     this.setupRoute(props,context);
   }
   setupRoute(props,context) {
+    Router.unregister(this);
     Router.registerRoute(this, this.realPath(props,context), props.exact);
   }
   componentWillUnmount() {
     Router.unregister(this);
   }
   render() {
-    const {path,children,render,component} = this.props;
+    const {merge,path,children,render,component} = this.props;
     const {url,params} = this.state;
+    console.log('render',path,url,this.realPath(this.props,this.context));
     if (!url) return null;
     if (render) {
       if (children) {
@@ -61,10 +65,9 @@ export class Route extends React.Component {
       }
       return React.createElement(component,this.state.params);
     }
-    if (!this.props.children) return null;
-    return React.Children.map(
-      this.props.children, 
-      child=>{
+    if (!children ) return null;
+    const nodes = React.Children.toArray(children);
+    return nodes.map( child=>{
         if (typeof child.type!='function') return child;
         return React.cloneElement(child,this.state.params);
       }
