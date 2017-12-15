@@ -742,7 +742,6 @@ var Route = exports.Route = function (_React$Component) {
       if (route && route.path && !path.startsWith('/')) {
         if (merge) res = route.path + '/' + path;else res = route.url + '/' + path;
       }
-      console.log('realPath', path, res);
       return res;
     }
   }, {
@@ -792,7 +791,6 @@ var Route = exports.Route = function (_React$Component) {
           url = _state.url,
           params = _state.params;
 
-      console.log('render', path, url, this.realPath(this.props, this.context));
       if (!url) return null;
       if (render) {
         if (children) {
@@ -937,6 +935,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Link = undefined;
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = __webpack_require__(3);
@@ -978,20 +978,30 @@ var Link = exports.Link = function (_React$Component) {
     key: 'render',
     value: function render() {
       var realTo = this.realTo(this.props, this.context);
-      var onClick = function onClick(e) {
-        _Router.Router.go(realTo);
-        e.preventDefault();
-        e.stopPropagation();
-      };
+      var events = {};
+      if (this.props.fast) {
+        events.onClick = function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        events.onMouseDown = function (e) {
+          if (e.button === 0) _Router.Router.go(realTo);
+        };
+      } else {
+        events.onClick = function (e) {
+          _Router.Router.go(realTo);
+          e.preventDefault();
+          e.stopPropagation();
+        };
+      }
       return _react2.default.createElement(
         'a',
-        { href: realTo,
+        _extends({ href: realTo,
           className: this.props.className,
           role: this.props.role,
-          style: this.props.style || {},
-          onClick: onClick
-        },
-        this.props.children || this.props.text
+          style: this.props.style || {}
+        }, events),
+        this.props.text || this.props.children || realTo
       );
     }
   }]);
@@ -1012,7 +1022,8 @@ Link.propTypes = {
   className: _propTypes2.default.string,
   children: _propTypes2.default.node,
   role: _propTypes2.default.string,
-  style: _propTypes2.default.object
+  style: _propTypes2.default.object,
+  fast: _propTypes2.default.bool
 };
 
 /***/ }),
@@ -1026,6 +1037,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.NavLink = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -1096,22 +1109,33 @@ var NavLink = exports.NavLink = function (_React$Component) {
     key: 'render',
     value: function render() {
       var realTo = this.realTo(this.props, this.context);
-      var onClick = function onClick(e) {
-        _Router.Router.go(realTo);
-        e.preventDefault();
-        e.stopPropagation();
-      };
+      var events = {};
+      if (this.props.fast) {
+        events.onClick = function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        events.onMouseDown = function (e) {
+          if (e.button === 0) _Router.Router.go(realTo);
+        };
+      } else {
+        events.onClick = function (e) {
+          _Router.Router.go(realTo);
+          e.preventDefault();
+          e.stopPropagation();
+        };
+      }
+
       var className = this.state.active ? (this.props.className ? this.props.className + ' ' : '') + this.props.activeClassName : this.props.className;
       return _react2.default.createElement(
         'a',
-        { href: realTo,
+        _extends({ href: realTo,
           'data-href': realTo,
           className: className,
           role: this.props.role,
-          style: this.props.style,
-          onClick: onClick
-        },
-        this.props.children || this.props.text || realTo
+          style: this.props.style
+        }, events),
+        this.props.text || this.props.children || realTo
       );
     }
   }]);
@@ -1137,7 +1161,8 @@ NavLink.propTypes = {
   activeClassName: _propTypes2.default.string,
   children: _propTypes2.default.node,
   role: _propTypes2.default.string,
-  style: _propTypes2.default.object
+  style: _propTypes2.default.object,
+  fast: _propTypes2.default.bool
 };
 
 /***/ }),

@@ -33,7 +33,7 @@ export class Link extends React.Component {
         role={this.props.role}
         style={this.props.style||{}}
         {...events}
-        >{this.props.children||this.props.text}</a>
+        >{this.props.text || this.props.children|| realTo}</a>
     );
   }
 }
