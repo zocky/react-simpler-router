@@ -32,7 +32,7 @@ Redirect.contextTypes = {
 };
 
 export function IndexRedirect(props) {
-  return <IndexRoute><Redirect to={props.to}/></IndexRoute>;
+return (<IndexRoute><Redirect to={props.to}/></IndexRoute>);
 }
 IndexRedirect.propTypes = {
   to:PropTypes.string.isRequired
