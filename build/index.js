@@ -1282,6 +1282,12 @@ Object.defineProperty(exports, 'Redirect', {
     return _Redirect.Redirect;
   }
 });
+Object.defineProperty(exports, 'IndexRedirect', {
+  enumerable: true,
+  get: function get() {
+    return _Redirect.IndexRedirect;
+  }
+});
 
 /***/ }),
 /* 13 */
