@@ -738,9 +738,12 @@ var Route = exports.Route = function (_React$Component) {
       var path = props.path,
           merge = props.merge;
 
+      var res = path;
       if (route && route.path && !path.startsWith('/')) {
-        if (merge) return route.path + '/';else return route.url + '/' + path;
-      } else return path;
+        if (merge) res = route.path + '/' + path;else res = route.url + '/' + path;
+      }
+      console.log('realPath', path, res);
+      return res;
     }
   }, {
     key: 'getChildContext',
@@ -766,6 +769,7 @@ var Route = exports.Route = function (_React$Component) {
   }, {
     key: 'setupRoute',
     value: function setupRoute(props, context) {
+      _Router.Router.unregister(this);
       _Router.Router.registerRoute(this, this.realPath(props, context), props.exact);
     }
   }, {
@@ -779,6 +783,7 @@ var Route = exports.Route = function (_React$Component) {
       var _this2 = this;
 
       var _props = this.props,
+          merge = _props.merge,
           path = _props.path,
           children = _props.children,
           render = _props.render,
@@ -787,6 +792,7 @@ var Route = exports.Route = function (_React$Component) {
           url = _state.url,
           params = _state.params;
 
+      console.log('render', path, url, this.realPath(this.props, this.context));
       if (!url) return null;
       if (render) {
         if (children) {
@@ -803,8 +809,9 @@ var Route = exports.Route = function (_React$Component) {
         }
         return _react2.default.createElement(component, this.state.params);
       }
-      if (!this.props.children) return null;
-      return _react2.default.Children.map(this.props.children, function (child) {
+      if (!children) return null;
+      var nodes = _react2.default.Children.toArray(children);
+      return nodes.map(function (child) {
         if (typeof child.type != 'function') return child;
         return _react2.default.cloneElement(child, _this2.state.params);
       });
