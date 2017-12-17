@@ -94,20 +94,35 @@ const cacheStringFn = (fn)=> {
  * @param {String} path - Route path 
  */
 const routeParser = cacheStringFn((path) => {
-  var reExact, reInexact, keys = [];
+  const keys = [];
   path = cleanPath(path);
-  if ( path==='') {
-    reExact=/^[/]?$/;
-    reInexact = /^/;
-  } else {
-    const src = path.split(/:(\w+)?/).map((p, i, a) => {
-      if (!(i % 2)) return p.replace(/(\W)/g, '\\$1');
-      keys.push(p);
-      return '([^\\/]+)';
-    }).join('');
-    reExact = new RegExp('^(' + src + ')/?$');
-    reInexact = new RegExp('^(' + src + ')(/|$)');
+  const parts = path.split('/');
+  var optional = false;
+  let head = '';
+  let tail = '';
+  for (var p of parts) {
+    let part;
+    if (!p) continue;
+
+    let [m,arg,lit,opt] = p.match(/^(?:(?::)(\w+)|(.*))([?])?$/);
+    if (!opt && optional) throw 'optional parts allowed only in final position';
+    if (lit) part = lit.replace(/(\W)/g,'\\$1');
+    else {
+      keys.push(arg);
+      part = '([^/]+)'
+    }
+    if (opt) {
+      optional = true;
+      head += '(?:/' + part;
+      tail +=')?'
+    } else {
+      head += '/' + part
+     }
   }
+  const src = head+tail;
+  const reExact = new RegExp('^(' + src + ')/?$');
+  const reInexact = new RegExp('^(' + src + ')(/|$)');
+
   return (url,exact) => {
     const m = (exact ? reExact : reInexact).exec(url);
     if (!m) return { active:false, params:null, url:null };
@@ -157,6 +172,10 @@ const linkParser = cacheStringFn((path) => {
  */
 const checkComponent = (component) => {
   var reg = routerRegistry.get(component);
+  if (!reg) {
+    console.log('unregistered',component)
+    return;
+  }
   var res = reg.parser(Router.url, reg.exact);
   component.onRouter(res);
 };
@@ -167,10 +186,9 @@ const checkComponent = (component) => {
 const urlChanged = () => {
   if (routerBusy) throw 'Router busy. This should never happen.';
   routerBusy = true;
-  var reg = Array.from(routerRegistry.keys());
-  for (var obj of reg) {
+  routerRegistry.forEach((val,obj)=>{
     checkComponent(obj);
-  }
+  })
   routerBusy = false;
 };
 

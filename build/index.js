@@ -64,7 +64,7 @@ module.exports =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -77,6 +77,9 @@ module.exports =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var Router = exports.Router = {
   /**
    * The current url (i.e. pathname) that the Router 
@@ -176,22 +179,62 @@ var cacheStringFn = function cacheStringFn(fn) {
  * @param {String} path - Route path 
  */
 var routeParser = cacheStringFn(function (path) {
-  var reExact,
-      reInexact,
-      keys = [];
+  var keys = [];
   path = cleanPath(path);
-  if (path === '') {
-    reExact = /^[/]?$/;
-    reInexact = /^/;
-  } else {
-    var src = path.split(/:(\w+)?/).map(function (p, i, a) {
-      if (!(i % 2)) return p.replace(/(\W)/g, '\\$1');
-      keys.push(p);
-      return '([^\\/]+)';
-    }).join('');
-    reExact = new RegExp('^(' + src + ')/?$');
-    reInexact = new RegExp('^(' + src + ')(/|$)');
+  var parts = path.split('/');
+  var optional = false;
+  var head = '';
+  var tail = '';
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = parts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var p = _step.value;
+
+      var part = void 0;
+      if (!p) continue;
+
+      var _p$match = p.match(/^(?:(?::)(\w+)|(.*))([?])?$/),
+          _p$match2 = _slicedToArray(_p$match, 4),
+          m = _p$match2[0],
+          arg = _p$match2[1],
+          lit = _p$match2[2],
+          opt = _p$match2[3];
+
+      if (!opt && optional) throw 'optional parts allowed only in final position';
+      if (lit) part = lit.replace(/(\W)/g, '\\$1');else {
+        keys.push(arg);
+        part = '([^/]+)';
+      }
+      if (opt) {
+        optional = true;
+        head += '(?:/' + part;
+        tail += ')?';
+      } else {
+        head += '/' + part;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
   }
+
+  var src = head + tail;
+  var reExact = new RegExp('^(' + src + ')/?$');
+  var reInexact = new RegExp('^(' + src + ')(/|$)');
+
   return function (url, exact) {
     var m = (exact ? reExact : reInexact).exec(url);
     if (!m) return { active: false, params: null, url: null };
@@ -242,6 +285,10 @@ var linkParser = cacheStringFn(function (path) {
  */
 var checkComponent = function checkComponent(component) {
   var reg = routerRegistry.get(component);
+  if (!reg) {
+    console.log('unregistered', component);
+    return;
+  }
   var res = reg.parser(Router.url, reg.exact);
   component.onRouter(res);
 };
@@ -252,32 +299,9 @@ var checkComponent = function checkComponent(component) {
 var urlChanged = function urlChanged() {
   if (routerBusy) throw 'Router busy. This should never happen.';
   routerBusy = true;
-  var reg = Array.from(routerRegistry.keys());
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
-
-  try {
-    for (var _iterator = reg[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var obj = _step.value;
-
-      checkComponent(obj);
-    }
-  } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion && _iterator.return) {
-        _iterator.return();
-      }
-    } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
-      }
-    }
-  }
-
+  routerRegistry.forEach(function (val, obj) {
+    checkComponent(obj);
+  });
   routerBusy = false;
 };
 
@@ -539,11 +563,11 @@ if (process.env.NODE_ENV !== 'production') {
   // By explicitly using `prop-types` you are opting into new development behavior.
   // http://fb.me/prop-types-in-prod
   var throwOnDirectAccess = true;
-  module.exports = __webpack_require__(16)(isValidElement, throwOnDirectAccess);
+  module.exports = __webpack_require__(17)(isValidElement, throwOnDirectAccess);
 } else {
   // By explicitly using `prop-types` you are opting into new production behavior.
   // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(15)();
+  module.exports = __webpack_require__(16)();
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
@@ -799,20 +823,32 @@ var Route = exports.Route = function (_React$Component) {
         if (component) {
           console.warn('Route ' + path + ' contains both prop render and prop component. Prop component will be ignored.');
         }
-        return this.props.render(params);
+        return _react2.default.createElement(
+          ErrorBoundary,
+          null,
+          this.props.render(params)
+        );
       }
       if (component) {
         if (children) {
           console.warn('Route ' + path + ' contains both prop component and children content. Children will be ignored.');
         }
-        return _react2.default.createElement(component, this.state.params);
+        return _react2.default.createElement(
+          ErrorBoundary,
+          null,
+          _react2.default.createElement(component, this.state.params)
+        );
       }
       if (!children) return null;
       var nodes = _react2.default.Children.toArray(children);
-      return nodes.map(function (child) {
-        if (typeof child.type != 'function') return child;
-        return _react2.default.cloneElement(child, _this2.state.params);
-      });
+      return _react2.default.createElement(
+        ErrorBoundary,
+        null,
+        nodes.map(function (child) {
+          if (typeof child.type != 'function') return child;
+          return _react2.default.cloneElement(child, _this2.state.params);
+        })
+      );
     }
   }]);
 
@@ -853,6 +889,58 @@ function IndexRoute(props) {
 IndexRoute.propTypes = {
   children: _propTypes2.default.node
 };
+
+var ErrorBoundary = function (_React$Component2) {
+  _inherits(ErrorBoundary, _React$Component2);
+
+  function ErrorBoundary(props) {
+    _classCallCheck(this, ErrorBoundary);
+
+    var _this3 = _possibleConstructorReturn(this, (ErrorBoundary.__proto__ || Object.getPrototypeOf(ErrorBoundary)).call(this, props));
+
+    _this3.state = { error: null, errorInfo: null };
+    return _this3;
+  }
+
+  _createClass(ErrorBoundary, [{
+    key: 'componentDidCatch',
+    value: function componentDidCatch(error, errorInfo) {
+      // Catch errors in any components below and re-render with error message
+      this.setState({
+        error: error,
+        errorInfo: errorInfo
+      });
+      // You can also log error messages to an error reporting service here
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      if (this.state.errorInfo) {
+        // Error path
+        return _react2.default.createElement(
+          'div',
+          null,
+          _react2.default.createElement(
+            'h2',
+            null,
+            'Something went wrong.'
+          ),
+          _react2.default.createElement(
+            'details',
+            { style: { whiteSpace: 'pre-wrap' } },
+            this.state.error && this.state.error.toString(),
+            _react2.default.createElement('br', null),
+            this.state.errorInfo.componentStack
+          )
+        );
+      }
+      // Normally, just render children
+      return this.props.children;
+    }
+  }]);
+
+  return ErrorBoundary;
+}(_react2.default.Component);
 
 /***/ }),
 /* 8 */
@@ -1263,6 +1351,182 @@ IndexRedirect.propTypes = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.RouteCheck = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+exports.IndexRoute = IndexRoute;
+
+var _react = __webpack_require__(3);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(2);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _Router = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var RouteCheck = exports.RouteCheck = function (_React$Component) {
+  _inherits(RouteCheck, _React$Component);
+
+  function RouteCheck(props, context) {
+    _classCallCheck(this, RouteCheck);
+
+    var _this = _possibleConstructorReturn(this, (RouteCheck.__proto__ || Object.getPrototypeOf(RouteCheck)).call(this, props, context));
+
+    _this.state = { params: null, url: null };
+    _this.onRouter = function (_ref) {
+      var params = _ref.params,
+          url = _ref.url;
+
+      if (_this.state.url !== url) {
+        _this.setState({ params: params, url: url });
+      }
+    };
+    return _this;
+  }
+
+  _createClass(RouteCheck, [{
+    key: 'realPath',
+    value: function realPath(props, context) {
+      var route = context.route;
+      var path = props.path,
+          merge = props.merge;
+
+      var res = path;
+      if (route && route.path && !path.startsWith('/')) {
+        if (merge) res = route.path + '/' + path;else res = route.url + '/' + path;
+      }
+      return res;
+    }
+  }, {
+    key: 'getChildContext',
+    value: function getChildContext() {
+      return {
+        route: {
+          url: this.context.route ? this.context.route.url : '/',
+          params: this.state.params,
+          path: this.context.route ? this.context.route.path : '/'
+        }
+      };
+    }
+  }, {
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      this.setupRoute(this.props, this.context);
+    }
+  }, {
+    key: 'componentWillReceiveProps',
+    value: function componentWillReceiveProps(props, context) {
+      this.setupRoute(props, context);
+    }
+  }, {
+    key: 'setupRoute',
+    value: function setupRoute(props, context) {
+      _Router.Router.unregister(this);
+      _Router.Router.registerRoute(this, this.realPath(props, context), props.exact);
+    }
+  }, {
+    key: 'componentWillUnmount',
+    value: function componentWillUnmount() {
+      _Router.Router.unregister(this);
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
+
+      var _props = this.props,
+          merge = _props.merge,
+          path = _props.path,
+          children = _props.children,
+          render = _props.render,
+          component = _props.component;
+      var _state = this.state,
+          url = _state.url,
+          params = _state.params;
+
+      if (!url) return null;
+      if (render) {
+        if (children) {
+          console.warn('Route ' + path + ' contains both prop render and children content. Children will be ignored.');
+        }
+        if (component) {
+          console.warn('Route ' + path + ' contains both prop render and prop component. Prop component will be ignored.');
+        }
+        return this.props.render(params);
+      }
+      if (component) {
+        if (children) {
+          console.warn('Route ' + path + ' contains both prop component and children content. Children will be ignored.');
+        }
+        return _react2.default.createElement(component, this.state.params);
+      }
+      if (!children) return null;
+      var nodes = _react2.default.Children.toArray(children);
+      return nodes.map(function (child) {
+        if (typeof child.type != 'function') return child;
+        return _react2.default.cloneElement(child, _this2.state.params);
+      });
+    }
+  }]);
+
+  return RouteCheck;
+}(_react2.default.Component);
+
+RouteCheck.propTypes = {
+  path: _propTypes2.default.string.isRequired,
+  exact: _propTypes2.default.bool,
+  merge: _propTypes2.default.bool,
+  render: _propTypes2.default.func,
+  component: _propTypes2.default.func,
+  children: _propTypes2.default.node
+};
+
+RouteCheck.contextTypes = {
+  route: _propTypes2.default.shape({
+    path: _propTypes2.default.string,
+    url: _propTypes2.default.string,
+    params: _propTypes2.default.object
+  })
+};
+
+RouteCheck.childContextTypes = {
+  route: _propTypes2.default.object.isRequired
+};
+
+function IndexRoute(props) {
+  var passProps = Object.assign({}, props);
+  delete passProps.exact;
+  delete passProps.path;
+  return _react2.default.createElement(
+    Route,
+    _extends({ exact: true, path: '' }, passProps),
+    props.children
+  );
+}
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
 var _Router = __webpack_require__(0);
 
@@ -1285,6 +1549,15 @@ Object.defineProperty(exports, 'IndexRoute', {
   enumerable: true,
   get: function get() {
     return _Route.IndexRoute;
+  }
+});
+
+var _RouteCheck = __webpack_require__(12);
+
+Object.defineProperty(exports, 'RouteCheck', {
+  enumerable: true,
+  get: function get() {
+    return _RouteCheck.RouteCheck;
   }
 });
 
@@ -1322,7 +1595,7 @@ Object.defineProperty(exports, 'IndexRedirect', {
 });
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1419,7 +1692,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1486,7 +1759,7 @@ module.exports = checkPropTypes;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1551,7 +1824,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1567,10 +1840,10 @@ module.exports = function() {
 var emptyFunction = __webpack_require__(4);
 var invariant = __webpack_require__(5);
 var warning = __webpack_require__(8);
-var assign = __webpack_require__(13);
+var assign = __webpack_require__(14);
 
 var ReactPropTypesSecret = __webpack_require__(6);
-var checkPropTypes = __webpack_require__(14);
+var checkPropTypes = __webpack_require__(15);
 
 module.exports = function(isValidElement, throwOnDirectAccess) {
   /* global Symbol */
