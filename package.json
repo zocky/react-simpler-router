@@ -1,6 +1,6 @@
 {
   "name": "react-simpler-router",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "description": "Straightforward dynamic routing for React with well-behaved nested routes.",
   "main": "build/index.js",
   "peerDependencies": {
